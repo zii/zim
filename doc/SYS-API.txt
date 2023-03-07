@@ -1,0 +1,37 @@
+后台接口
+
+--- type ---
+
+// 授权结果
+Authorization# token:string;
+
+--- function ---
+
+# ✅后台创建im用户 name:昵称 photo:头像URL ex:额外信息 返回user_id
+sys.register# name:string photo:string ex:string = string;
+
+# ✅后台授权新token
+    user_id:用户ID
+    platform:平台类型
+    device_id:设备ID, 用来做推送通知
+ 授权时可能会触发其他设备强制下线
+sys.authToken# user_id:string platform:int device_id:string = Authorization;
+
+# ✅后台发消息接口 message:id不用填 返回消息ID
+sys.sendMessage# message:Message = long;
+
+# ✅后台强制用户断线 token:(可选)具体到设备
+sys.disconnect# user_id:string token:string reason:string = bool;
+
+# ✅后台强制登出用户
+sys.logout# token:string = bool;
+
+# ✅修改用户资料 name:昵称 photo:头像URL ex:额外信息
+sys.editUser# user_id:string name:string photo:string ex:string = bool;
+
+# ✅禁用用户账号
+# 强制登出用户, 删除所有token; 下次授权时自动FORBIDDEN
+sys.ban# user_id:string = bool;
+
+# ✅解除禁用用户账号
+sys.unban# user_id:string = bool;

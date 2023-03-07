@@ -1,0 +1,198 @@
+--------------
+安装mysql8 on centos7:
+https://dev.mysql.com/doc/refman/8.0/en/linux-installation-yum-repo.html
+yum install mysql80-community-release-el7-{version-number}.noarch.rpm
+yum -y remove mariadb-libs
+# https://dev.mysql.com/get/mysql80-community-release-el7-6.noarch.rpm
+yum install mysql-community-server --nogpgcheck
+systemctl enable mysqld
+systemctl start mysqld
+grep "A temporary password" /var/log/mysqld.log
+mysql_secure_installation # 修改密码
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost';
+UPDATE mysql.user SET host='%' WHERE user='root';
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'HeCJyV(1dd>u';
+FLUSH PRIVILEGES;
+关闭performance schema:
+vim /etc/my.cnf
+performance_schema=OFF
+sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
+systemctl restart mysqld
+
+--------------
+安装redis on centos7:
+方案1:
+yum install epel-release
+yum install redis
+方案2:
+yum install -y http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
+yum --enablerepo=remi install redis
+systemctl enable redis
+systemctl start redis
+vim /etc/redis.conf
+bind *
+appendonly yes
+maxclients 1000000
+默认端口: 2379
+
+--------------
+redis集群:
+清库
+redis-cli --cluster call 10.10.10.179:7001 dbsize -a h0oZZVUaedEcSI1zFZa7
+redis-cli --cluster call 10.10.10.179:7001 flushdb -a h0oZZVUaedEcSI1zFZa7
+
+--------------
+安装java:
+yum -y install java-1.8.0-openjdk.x86_64
+
+--------------
+安装kafka:
+https://kafka.apache.org/quickstart
+wget https://downloads.apache.org/kafka/3.2.1/kafka_2.13-3.2.1.tgz
+注意配置server.properties:
+advertised.listeners=PLAINTEXT://10.10.10.87:9092
+
+开启zookeeper:
+bin/zookeeper-server-start.sh -daemon config/zookeeper.properties
+开启kafka:
+bin/kafka-server-start.sh -daemon config/server.properties
+关闭kafka:
+bin/kafka-server-stop.sh
+查看所有topic:
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+修改topic分区数:
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --topic zim-level1 -alter --partitions 10
+删除消费者组:
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --delete --group zim-level1
+默认端口: 9092
+
+-----
+kafka管理软件-offset explorer:
+https://blog.csdn.net/weixin_56193843/article/details/120238989
+
+-----
+yum install ntp
+根据服务器所在地区配置就近的ntp节点地址
+vim /etc/ntp.conf
+server ntp.myhuaweicloud.com
+server ntp.aliyun.com
+server time.apple.com # 国外
+server pool.ntp.org # 国外
+
+-----
+git保存密码:
+git config --global credential.helper store
+
+-----
+安装golang:
+wget https://go.dev/dl/go1.19.linux-amd64.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.19.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+vim ~/.bashrc
+export GOPROXY=https://goproxy.cn
+export PATH=$PATH:/usr/local/go/bin
+
+-----
+本地测试nginx:
+yum install nginx
+server {
+    listen       81;
+    server_name  _;
+    root         /root/code/zim-server/test/test-html;
+
+    location /v1 {
+        proxy_pass http://127.0.0.1:1840/v1;
+    }
+
+    location /ws {
+        proxy_pass http://127.0.0.1:1937;
+        proxy_http_version 1.1;
+        proxy_connect_timeout 4s;
+        proxy_read_timeout 60s;
+        proxy_send_timeout 12s;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+    }
+}
+
+-----
+supervisor:
+yum install supervisor
+systemctl enable supervisord
+systemctl start supervisord
+
+vim /etc/supervisord.conf
+minfds=1000000
+systemctl restart supervisord
+
+vim /etc/supervisord.d/im.ini
+[program:zimapi]
+directory=/root/code/zim-server/bin/dev
+environment=RELEASE=1
+command=/root/code/zim-server/bin/dev/zimapi -config config_86.toml -port 1840
+redirect_stderr=true
+stdout_logfile=/var/log/zim/api.log
+stdout_logfile_maxbytes=50MB
+stdout_logfile_backups=5
+startretries=1
+autostart=true
+autorestart=unexpected
+priority=1
+user=root
+
+[program:zimbroker]
+directory=/root/code/zim-server/bin/dev
+environment=RELEASE=1
+command=/root/code/zim-server/bin/dev/zimbroker -config config_86.toml
+redirect_stderr=true
+stdout_logfile=/var/log/zim/broker.log
+stdout_logfile_maxbytes=50MB
+stdout_logfile_backups=5
+startretries=1
+autostart=true
+autorestart=unexpected
+priority=1
+user=root
+
+------
+开百万连接:
+修改ulimit, 参考limits.sh;
+如果是用systemctl启动的服务, 需单独修改每个服务的conf;
+如果是supervisor启动的服务, 需要修改supervisord.conf;
+
+vim /etc/systemd/system/redis.service.d/limit.conf
+[Service]
+LimitNOFILE=1000000
+
+vim /usr/lib/systemd/system/mysqld.service
+LimitNOFILE = 1000000
+
+vim /etc/redis.conf
+maxclients = 1000000
+
+vim /etc/supervisord.conf
+minfds=1000000
+
+vim /etc/nginx/nginx.conf
+worker_connections 1000000;
+
+-----
+安装apache ab:
+yum -y install httpd-tools
+
+压测:
+ab -c 10000 -n 10000 -k http://10.10.10.87:81/v1/test/test?t=5
+
+即便开了100w连接, 本机压测开到2w以上还会有端口数不够的问题, cannot assign requested address. 需开多个机器测.
+
+-----
+
+生成证书:
+openssl genrsa -out key.pem 2048
+openssl rsa -in key.pem -pubout -out public.pem
+openssl req -new -x509 -key key.pem -out cert.pem -days 36500
+生成带SAN的证书:
+openssl req -nodes -new -keyout key.pem -out cert.pem
+openssl x509 -req -sha256 -days 3650 -in cert.pem \
+-signkey key.pem -out cert.pem \
+-extfile <(printf "subjectAltName=DNS:localhost,DNS:example.com,IP:192.168.1.1,IP:127.0.0.1")

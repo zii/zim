@@ -1,0 +1,1729 @@
+basePath: /v1
+definitions:
+  proto.Authorization:
+    properties:
+      token:
+        description: 授权token
+        type: string
+    type: object
+  proto.Chat:
+    properties:
+      about:
+        description: 群公告
+        type: string
+      id:
+        description: 群ID
+        type: string
+      maxp:
+        description: 人数上限, 0无限
+        type: integer
+      muted:
+        description: 是否全员禁言
+        type: boolean
+      owner_id:
+        description: 群主ID
+        type: string
+      photo:
+        description: 群图标
+        type: string
+      title:
+        description: 群标题
+        type: string
+      type:
+        description: 群类型, 1普通群, 2超级群
+        type: integer
+    type: object
+  proto.CosCred:
+    description: '参考文档: https://cloud.tencent.com/document/product/436/9067'
+    properties:
+      bucket:
+        description: 桶名
+        example: cat1-1254751699
+        type: string
+      region:
+        description: 区域名
+        example: ap-nanjing
+        type: string
+      secret_id:
+        description: 临时key
+        type: string
+      secret_key:
+        description: 临时secret
+        type: string
+      timeout:
+        description: 过期秒数, 默认3600
+        type: integer
+      token:
+        description: sessionToken
+        type: string
+    type: object
+  proto.Credential:
+    properties:
+      cos:
+        $ref: '#/definitions/proto.CosCred'
+      minio:
+        $ref: '#/definitions/proto.MinioCred'
+      obs:
+        $ref: '#/definitions/proto.ObsCred'
+      oss:
+        $ref: '#/definitions/proto.OssCred'
+      platform:
+        description: 平台类型(oss阿里云,obs华为云,cos腾讯云,minio)
+        type: string
+    type: object
+  proto.Friend:
+    properties:
+      blocked:
+        description: 是否被拉黑
+        type: boolean
+      letter:
+        description: 昵称首字母
+        type: string
+      name:
+        description: 备注昵称
+        type: string
+      user:
+        $ref: '#/definitions/proto.User'
+        description: 好友用户信息
+      user_id:
+        description: 用户ID
+        type: string
+    type: object
+  proto.FriendApply:
+    properties:
+      from_id:
+        description: 申请者ID
+        type: string
+      greets:
+        description: 问候语列表, 最新3条
+        items:
+          $ref: '#/definitions/proto.Greet'
+        type: array
+      hash:
+        description: 申请标识(唯一)
+        type: string
+      name:
+        description: 申请者备注名称
+        type: string
+      peer_user:
+        $ref: '#/definitions/proto.User'
+        description: 对方用户信息
+      status:
+        description: 状态(0等待验证 1已添加 2已过期)
+        type: integer
+      to_id:
+        description: 被邀请者ID
+        type: string
+      updated_at:
+        description: 申请时间戳, 每次申请都会更新
+        type: integer
+    type: object
+  proto.Greet:
+    properties:
+      text:
+        description: 问候语文本
+        type: string
+      time:
+        description: 发送时间
+        type: integer
+    type: object
+  proto.Member:
+    properties:
+      muted:
+        description: 是否被禁言
+        type: boolean
+      name:
+        description: 成员昵称
+        type: string
+      role:
+        description: 角色(0普通成员 1管理员 2创建者)
+        type: integer
+      user:
+        $ref: '#/definitions/proto.User'
+        description: 成员用户信息
+    type: object
+  proto.MinioCred:
+    properties:
+      access_id:
+        type: string
+      access_key:
+        type: string
+      bucket:
+        type: string
+      endpoint:
+        type: string
+      final_host:
+        type: string
+      timeout:
+        type: integer
+      token:
+        type: string
+    type: object
+  proto.ObsCred:
+    description: '参考文档: https://support.huaweicloud.com/bestpractice-obs/obs_05_1203.html'
+    properties:
+      signed_url:
+        description: 预签名URL
+        type: string
+      timeout:
+        description: 过期秒数, 默认3600
+        type: integer
+    type: object
+  proto.OssCred:
+    properties:
+      access_key_id:
+        description: 临时key
+        example: STS.NTp74bN1Z5JNgjjqhqnZPqVYJ
+        type: string
+      access_key_secret:
+        description: 临时secret
+        example: 8acGDXgdLmPNcZmmoKEKmeCqjQz5SVWnYqq556YKL26d
+        type: string
+      bucket:
+        description: 桶名
+        example: im1
+        type: string
+      endpoint:
+        description: oss节点域名
+        example: oss-cn-guangzhou.aliyuncs.com
+        type: string
+      final_host:
+        description: 最终文件URL前缀
+        example: http://openim1.oss-accelerate.aliyuncs.com
+        type: string
+      timeout:
+        description: 过期秒数, 默认3600
+        example: 3600
+        type: integer
+      token:
+        description: 上传用的token, 较长
+        type: string
+    type: object
+  proto.Success:
+    properties:
+      code:
+        example: 200
+        type: integer
+      data: {}
+      msg:
+        example: success
+        type: string
+    type: object
+  proto.User:
+    properties:
+      ex:
+        description: 用户扩展信息
+        type: string
+      id:
+        description: 用户ID
+        type: string
+      name:
+        description: 用户昵称
+        type: string
+      photo:
+        description: 用户头像
+        type: string
+      status:
+        description: 用户状态(0正常 1禁用)
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: |-
+    零服务器端集成Swagger文档用于测试各个API接口，更多详情和限流请访问零服务端集成文档。
+    Authorization token 大多数的 REST API 需要权限才能访问，以格式Bearer ${token}作为请求头，其中token可以通过/{org_name}/{app_name}/token获得。
+  title: 零信服务器端集成Swagger文档
+  version: "1.0"
+paths:
+  /account/getChats:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 LIMIT_EXCEED 分页参数错误
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 分页偏移量, 默认0
+        in: formData
+        name: offset
+        type: integer
+      - description: 每页条数, 最大100
+        in: formData
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 群列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/proto.Chat'
+                  type: array
+              type: object
+      summary: 用户所在群列表
+      tags:
+      - 用户体系
+  /account/updateNotifySetting:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 PEER_ID_INVALID 对话不存在
+        400 SETTING_INVALID 参数解析错误
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 对话ID
+        in: formData
+        name: peer_id
+        required: true
+        type: string
+      - default: '{"badge":true}'
+        description: 免打扰设置
+        in: formData
+        name: setting
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 更新对话免打扰设置
+      tags:
+      - 用户体系
+  /chat/addUser:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 CHAT_DISMISSED 群已解散
+        400 LIMIT_EXCEEDED 群人数已达上限
+        400 NOT_MEMBER 您不是群成员
+        400 MEMBER_DUPLICATED 不可添加重复的成员
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: chat_id
+        required: true
+        type: string
+      - default: '["u2"]'
+        description: 用户ID列表
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 添加成员
+      tags:
+      - 群组管理
+  /chat/create:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 MEMBER_ID_INVALID 初始成员不存在
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群类型(1普通群 2超级群)
+        in: formData
+        name: type
+        required: true
+        type: integer
+      - description: 群标题
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: 群公告
+        in: formData
+        name: about
+        type: string
+      - default: '["u2"]'
+        description: 初始成员用户ID列表,最大100人
+        in: formData
+        name: init_members
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回群ID
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 创建新群
+      tags:
+      - 群组管理
+  /chat/deleteUser:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 NOT_MEMBER 您不是群成员
+        400 ACCESS_DENIED 您没有权限，需要管理员或群主
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: chat_id
+        required: true
+        type: string
+      - description: 群成员ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 删除成员/退出群
+      tags:
+      - 群组管理
+  /chat/dismiss:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 SELF_NOT_MEMBER 您不是群成员
+        400 ACCESS_DENIED 您没有权限，需要管理员或群主
+        400 CHAT_ID_INVALID 群不存在
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: chat_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 解散群
+      tags:
+      - 群组管理
+  /chat/editInfo:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 CHAT_INVALID 群不存在
+        400 NOT_MEMBER 您不是群成员
+        400 ACCESS_DENIED 您没有权限，需要管理员或群主
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: chat_id
+        required: true
+        type: string
+      - description: 群标题
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: 群公告
+        in: formData
+        name: about
+        required: true
+        type: string
+      - description: 群图标URL
+        in: formData
+        name: photo
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 修改群信息
+      tags:
+      - 群组管理
+  /chat/editName:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        成功后给所有成员发送事件: EvEditMemberName
+        失败响应:
+        400 NAME_LONG 成员昵称过长
+        400 NAME_EMPTY 成员昵称不能为空
+        400 SELF_NOT_MEMBER 您不是群成员
+        400 USER_NOT_MEMBER 对方不是群成员
+        400 ACCESS_DENIED 您没有权限，需要管理员或群主
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: chat_id
+        required: true
+        type: string
+      - description: 群成员ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      - description: 新的成员昵称
+        in: formData
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 修改群成员昵称
+      tags:
+      - 群组管理
+  /chat/editRole:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 SELF_NOT_MEMBER 您不是群成员
+        400 USER_NOT_MEMBER 对方不是群成员
+        400 ACCESS_DENIED 您没有权限，需要管理员或群主
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: chat_id
+        required: true
+        type: string
+      - description: 群成员ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      - description: 角色类型(0普通成员 1管理员 2群主)
+        in: formData
+        name: role
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 修改成员角色
+      tags:
+      - 群组管理
+  /chat/getChat:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 群信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/proto.Chat'
+              type: object
+      summary: 获取单个群详情
+      tags:
+      - 群组管理
+  /chat/getMembers:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 LIMIT_EXCEED 分页参数错误
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: chat_id
+        required: true
+        type: string
+      - description: 分页偏移量
+        in: formData
+        name: offset
+        required: true
+        type: integer
+      - description: 每页条数
+        in: formData
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回群成员列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/proto.Member'
+                  type: array
+              type: object
+      summary: 群成员列表
+      tags:
+      - 群组管理
+  /chat/mute:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 NOT_MEMBER 您不是群成员
+        400 ACCESS_DENIED 您没有权限，需要管理员或群主
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: chat_id
+        required: true
+        type: string
+      - description: 时长(0无限)
+        in: formData
+        name: duration
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 全员禁言
+      tags:
+      - 群组管理
+  /chat/muteUser:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 SELF_NOT_MEMBER 您不是群成员
+        400 USER_NOT_MEMBER 对方不是群成员
+        400 ACCESS_DENIED 您没有权限，需要管理员或群主
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: chat_id
+        required: true
+        type: string
+      - description: 群成员ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      - description: 时长(0无限)
+        in: formData
+        name: duration
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 成员禁言
+      tags:
+      - 群组管理
+  /chat/transferOwner:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 SELF_NOT_MEMBER 您不是群成员
+        400 USER_NOT_MEMBER 对方不是群成员
+        400 ACCESS_DENIED 您没有权限，需要管理员或群主
+        400 CHAT_ID_INVALID 群组不存在
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: chat_id
+        required: true
+        type: string
+      - description: 新的群主ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 转移群主
+      tags:
+      - 群组管理
+  /chat/unmute:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 NOT_MEMBER 您不是群成员
+        400 ACCESS_DENIED 您没有权限，需要管理员或群主
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: chat_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 解除全员禁言
+      tags:
+      - 群组管理
+  /chat/unmuteUser:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 SELF_NOT_MEMBER 您不是群成员
+        400 USER_NOT_MEMBER 对方不是群成员
+        400 ACCESS_DENIED 您没有权限，需要管理员或群主
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 群ID
+        in: formData
+        name: chat_id
+        required: true
+        type: string
+      - description: 群成员ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 解除成员禁言
+      tags:
+      - 群组管理
+  /friend/accept:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 LIMIT_EXCEEDED 分页参数错误
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 好友申请记录唯一标识
+        in: formData
+        name: hash
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 接受好友申请
+      tags:
+      - 好友(通讯录)管理
+  /friend/add:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        双向添加成功后发送TipBecomeFriends消息
+        失败响应:
+        400 NAME_LONG 备注名过长
+        400 USER_ID_INVALID 对方账号不存在
+        400 USER_FORBIDDEN 对方账号异常，已被禁止登录
+        400 LIMIT_EXCEEDED 您的好友数量已达上限
+        400 PEER_LIMIT_EXCEEDED 对方好友数量已达上限
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 对方用户ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      - description: 好友备注名
+        in: formData
+        name: name
+        type: string
+      - description: 是否添加双向好友
+        in: formData
+        name: mutal
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 直接添加好友
+      tags:
+      - 好友(通讯录)管理
+  /friend/block:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 USER_ID_EMPTY 参数为空
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 对方用户ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 屏蔽联系人
+      tags:
+      - 好友(通讯录)管理
+  /friend/deleteApply:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 HASH_EMPTY 参数为空
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 申请记录唯一标识
+        in: formData
+        name: hash
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 删除好友申请
+      tags:
+      - 好友(通讯录)管理
+  /friend/edit:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 NOT_FRIEND 对方不是您的好友
+        400 NAME_LONG 备注名过长
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 好友ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      - description: 备注名
+        in: formData
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 修改好友信息
+      tags:
+      - 好友(通讯录)管理
+  /friend/editApply:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 NAME_LONG 备注名过长
+        400 HASH_INVALID 申请记录不存在
+        400 STATUS_INVALID 申请状态错误
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 申请记录唯一标识
+        in: formData
+        name: hash
+        required: true
+        type: string
+      - description: 备注名
+        in: formData
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 修改好友申请信息
+      tags:
+      - 好友(通讯录)管理
+  /friend/getApplyList:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        包括我邀请别人的记录和别人邀请我的记录, 按申请时间倒序排列翻页
+        失败响应:
+        400 LIMIT_EXCEED 分页参数错误
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 分页偏移
+        in: formData
+        name: offset
+        required: true
+        type: integer
+      - description: 每页条数
+        in: formData
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回申请记录列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/proto.FriendApply'
+              type: object
+      summary: 获取好友申请列表
+      tags:
+      - 好友(通讯录)管理
+  /friend/getBlocked:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 LIMIT_EXCEED 分页参数错误
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回黑名单好友列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/proto.Friend'
+                  type: array
+              type: object
+      summary: 黑名单列表
+      tags:
+      - 好友(通讯录)管理
+  /friend/getFriends:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 LIMIT_EXCEED 分页参数错误
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回全部好友列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/proto.Friend'
+                  type: array
+              type: object
+      summary: 全部好友的列表
+      tags:
+      - 好友(通讯录)管理
+  /friend/invite:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        如果对方已添加自己, 发送TipBecomeFriends, 直接成为好友; 否则#friend给to_id发送消息, 收到在通讯录按钮显示小红点
+        失败响应:
+        400 GREET_LONG 问候语过长
+        400 NAME_LONG 备注名过长
+        400 TO_ID_INVALID 对方账号不存在
+        400 USER_FORBIDDEN 对方账号异常，已被禁止登录
+        400 LIMIT_EXCEEDED 您的好友数已达上限
+        400 DUPLICATED_APPLY 重复邀请
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 被邀请用户ID
+        in: formData
+        name: to_id
+        required: true
+        type: string
+      - description: 问候语
+        in: formData
+        name: greet
+        type: string
+      - description: 备注名
+        in: formData
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回申请记录
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/proto.FriendApply'
+              type: object
+      summary: 发起好友申请
+      tags:
+      - 好友(通讯录)管理
+  /friend/remove:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        同时删除好友申请记录, 删除对话, 聊天记录
+        失败响应:
+        400 USER_ID_EMPTY 参数为空
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 好友ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否发生数据变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 移除好友
+      tags:
+      - 好友(通讯录)管理
+  /friend/unblock:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 USER_ID_EMPTY 参数为空
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 好友ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否发生数据变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 解除屏蔽联系人
+      tags:
+      - 好友(通讯录)管理
+  /sys/authToken:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 USER_ID_INVALID 用户账号不存在
+        400 FORBIDDEN 用户账号异常，已被禁止登录
+      parameters:
+      - description: 用户ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      - description: 平台类型(1:IOS 2:ANDROID 3:WEB 4:DESKTOP)
+        in: formData
+        name: platform
+        required: true
+        type: integer
+      - description: 设备ID, 用来做推送通知
+        in: formData
+        name: device_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回授权结果
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/proto.Authorization'
+              type: object
+      summary: 后台授权新token
+      tags:
+      - 服务端集成
+  /sys/ban:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        强制登出用户, 删除所有token; 下次授权时自动FORBIDDEN
+        失败响应:
+        400 USER_STATUS_INVALID 用户账号异常
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 用户ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有数据变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 禁用用户账号
+      tags:
+      - 服务端集成
+  /sys/disconnect:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 USER_ID_EMPTY 参数为空
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 用户ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      - description: (可选)具体到设备
+        in: formData
+        name: token
+        required: true
+        type: string
+      - description: 参考*断线原因*
+        in: formData
+        name: reason
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有数据变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 强制用户断线
+      tags:
+      - 服务端集成
+  /sys/editUser:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 USER_ID_EMPTY 参数为空
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 用户ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      - description: 昵称
+        in: formData
+        name: name
+        type: string
+      - description: 头像URL
+        in: formData
+        name: photo
+        type: string
+      - description: 自定义信息
+        in: formData
+        name: ex
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有数据变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 修改用户资料
+      tags:
+      - 服务端集成
+  /sys/logout:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 对方用户token
+        in: formData
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有数据变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 强制登出用户
+      tags:
+      - 服务端集成
+  /sys/register:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 NAME_EMPTY 昵称不能为空
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 昵称
+        in: formData
+        name: name
+        type: string
+      - description: 头像URL
+        in: formData
+        name: photo
+        type: string
+      - description: 自定义信息
+        in: formData
+        name: ex
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回用户ID
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 后台创建im用户
+      tags:
+      - 服务端集成
+  /sys/sendMessage:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 MESSAGE_INVALID 消息无法解析
+        400 FROM_ID_INVALID 发送者账号不存在
+        400 FROM_USER_BANNED 发送者账号异常
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - default: '{"type": 101, "from_id":"#friend", "to_id":"u4", "elem":{"text":
+          "你好1"}}'
+        description: 消息结构
+        in: formData
+        name: message
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回消息ID
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 后台发消息接口
+      tags:
+      - 服务端集成
+  /sys/unban:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 USER_STATUS_INVALID 用户状态不正确
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 用户ID
+        in: formData
+        name: user_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回是否有数据变更
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      summary: 解除禁用用户账号
+      tags:
+      - 服务端集成
+  /upload/getCredential:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        Token自颁发后将在一段时间内有效(timeout), 并在有效期内重复使用
+        失败响应:
+        400 异常信息
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回直传凭证
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/proto.Credential'
+              type: object
+      summary: 获取直传凭证
+      tags:
+      - 其他
+  /user/getUser:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 ID_EMPTY 参数为空
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: 用户ID
+        in: formData
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回单个用户模型
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  $ref: '#/definitions/proto.User'
+              type: object
+      summary: 获取单个用户详情
+      tags:
+      - 其他
+  /user/getUsers:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: |-
+        失败响应:
+        400 LIMIT_EXCEEDED 超过单次最大查询人数上限
+      parameters:
+      - description: 授权token
+        in: header
+        name: token
+        required: true
+        type: string
+      - default: '["u2"]'
+        description: 用户ID的JSON数组
+        in: formData
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回用户列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/proto.Success'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/proto.User'
+                  type: array
+              type: object
+      summary: 批量获取多个用户详情
+      tags:
+      - 其他
+swagger: "2.0"

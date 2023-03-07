@@ -1,0 +1,119 @@
+性能测试报告
+
+--------
+单机8c16g
+
+测试结果: 保守来说在线消息并发能力为1w/s, 后台持久化队列消费能力为5k/s.
+测试方法: ab测试10000并发, 调10w次发单聊消息接口, 每次随机选择发送者和接收者.
+资源耗费: 
+  内存: 6.7G
+  CPU: 峰值600%
+  磁盘: 100W条消息约占用300MB磁盘
+  带宽: 峰值时约7MB/s
+
+[root@87 ~]# ab -c 10000 -n 100000 -k http://10.10.10.105:1840/v1/test/test?t=5
+
+Server Hostname:        10.10.10.105
+Server Port:            1840
+
+Document Path:          /v1/test/test?t=5
+Document Length:        41 bytes
+
+Concurrency Level:      10000
+Time taken for tests:   8.707 seconds
+Complete requests:      100000
+Failed requests:        0
+Write errors:           0
+Keep-Alive requests:    100000
+Total transferred:      23800000 bytes
+HTML transferred:       4100000 bytes
+Requests per second:    11485.62 [#/sec] (mean)
+Time per request:       870.654 [ms] (mean)
+Time per request:       0.087 [ms] (mean, across all concurrent requests)
+Transfer rate:          2669.51 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0   37 113.1      0     486
+Processing:   260  786 276.5    721    2454
+Waiting:        4  786 276.5    721    2454
+Total:        260  823 364.5    722    2825
+
+Percentage of the requests served within a certain time (ms)
+  50%    722
+  66%    766
+  75%    795
+  80%    813
+  90%   1174
+  95%   1602
+  98%   2303
+  99%   2340
+ 100%   2825 (longest request)
+
+--------
+单机4c8g
+
+测试结果: 保守来说在线消息并发能力为7000/s, 后台持久化队列消费能力为2k/s.
+资源耗费: 
+  内存: 消耗2G
+  CPU:  峰值240%
+  磁盘: 100W条消息约占用300MB磁盘
+  带宽: 峰值时约7MB/s
+
+[root@142 dev]# ab -c 1000 -n 10000 -k http://localhost:1840/v1/test/test?t=5
+This is ApacheBench, Version 2.3 <$Revision: 1430300 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient)
+Completed 1000 requests
+Completed 2000 requests
+Completed 3000 requests
+Completed 4000 requests
+Completed 5000 requests
+Completed 6000 requests
+Completed 7000 requests
+Completed 8000 requests
+Completed 9000 requests
+Completed 10000 requests
+Finished 10000 requests
+
+
+Server Software:        
+Server Hostname:        localhost
+Server Port:            1840
+
+Document Path:          /v1/test/test?t=5
+Document Length:        41 bytes
+
+Concurrency Level:      1000
+Time taken for tests:   1.350 seconds
+Complete requests:      10000
+Failed requests:        0
+Write errors:           0
+Keep-Alive requests:    10000
+Total transferred:      2380000 bytes
+HTML transferred:       410000 bytes
+Requests per second:    7405.32 [#/sec] (mean)
+Time per request:       135.038 [ms] (mean)
+Time per request:       0.135 [ms] (mean, across all concurrent requests)
+Transfer rate:          1721.16 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    7  22.0      0     110
+Processing:    29  120  99.6     89     478
+Waiting:       11  120  99.6     89     478
+Total:         29  127 119.5     89     588
+
+Percentage of the requests served within a certain time (ms)
+  50%     89
+  66%    101
+  75%    113
+  80%    124
+  90%    317
+  95%    478
+  98%    518
+  99%    534
+ 100%    588 (longest request)
+

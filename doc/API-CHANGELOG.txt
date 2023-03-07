@@ -1,0 +1,70 @@
+API修订历史
+
+2022-9-22
+
+[NEW] account.updateNotifySetting# 更新对话免打扰设置
+[FEAT] message.deleteDialog# 新增参数clear:bool;
+
+2022-9-21
+
+[FIX] TipMemberEnter# 新增字段 inviter:TinyUser
+[FIX] Chat# 新增字段maxp:int 群成员上限
+
+2022-9-20
+
+[NEW] message.pinDialog# 切换对话置顶状态
+
+2022-9-19
+
+[FIX] FriendApply# from_user:User改为peer_user:User
+
+2022-9-17
+
+[NEW] user.getUsers# 批量获取多个用户详情
+[NEW] friend.edit# 修改好友信息
+
+[FIX] Message#结构恢复from_user字段
+[FIX] FriendApply#好友申请记录, 增加字段from_user:User
+
+2022-9-14
+
+[NEW] friend.editApply# 修改好友申请记录接口
+
+2022-9-8
+
+[NEW ERROR] friend.invite/friend.accept/friend.add 返回: 400 LIMIT_EXCEEDED 好友达到上限
+[NEW ERROR] 400 USER_FORBIDDEN 对方账号异常，已被限制登录
+[NEW ERROR] 全局错误 403 FORBIDDEN 您的账号存在异常, 已被限制登录
+
+[FIX] User#结构移除字段deleted, 增加字段status
+
+2022-9-6
+
+[NEW] account.getChats# 获取我的群列表
+[NEW] sys.editUser# 修改用户资料
+
+2022-9-5
+
+[FIX] message.getDialogs接口, 返回类型由[Dialog]变为Dialogs, 加了个总条数, 避免二次请求.
+
+2022-9-2
+
+[NEW] friend.getFriends# 获取好友列表
+[NEW] friend.remove# 移除好友
+[NEW] friend.add# 直接添加好友
+[NEW] friend.block# 拉黑联系人
+[NEW] friend.unblock# 解除拉黑联系人
+[NEW] friend.getBlocked# 黑名单列表
+
+2022-8-31
+
+[NEW] 新增系统ID, 前缀为#
+[NEW] friend.invite# 邀请好友接口
+[NEW] friend.accept# 接受好友申请
+[NEW] friend.deleteApply# 删除好友申请
+[NEW] friend.getApplyList# 获取好友申请列表
+[NEW] message.clearDialog# 清空对话聊天记录
+[NEW] message.deleteDialog# 删除对话
+
+[FIX] EvEditMemberName改名为EvMemberName
+[FIX] Friend# banned:bool 改名为 blocked:bool

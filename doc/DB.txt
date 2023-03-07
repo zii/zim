@@ -1,0 +1,147 @@
+MYSQL表结构
+
+*user_id/peer_id编号规则:
+    u101 表示用户ID
+    g102 表示普通群ID
+    c103 表示超级群ID
+
+user:
+    用户表
+    id bigint
+    user_id string 用户ID
+    name 昵称
+    photo 用户头像
+    ex string 扩展信息
+    status bool 0正常 1封禁
+    created_at  注册时间
+
+    唯一索引: user_id
+
+dialog:
+    用户对话表(暂不用, 都存redis)
+    id bigint
+    user_id
+    peer_id 接收者ID
+    pinned 是否置顶
+    *top_message 最后一条消息的ID(放redis)
+    *unread_count 未读条数, 受readHistory影响(放redis)
+    created_at
+
+    唯一索引: (user_id, peer_id)
+    索引: user_id
+
+message:
+    消息表, 单聊和普通群的消息本体
+    id bigint
+    msg_id bigint 消息全局唯一ID
+    msg_blob blob 消息数据
+    from_id 
+    to_id
+    created_at
+
+    唯一索引: msg_id
+    索引: to_id
+
+user_msgbox:
+    用户信箱表
+    到时按user_id分表.
+    id bigint
+    user_id  我IDs
+    peer_id  对方ID
+    msg_id bigint 消息表ID
+    from_id  发送者ID, 用from_id=user_id表示发件箱, 否则为收件箱
+    to_id  接收者ID
+    created_at 发送时间
+
+    唯一索引: (user_id, msg_id); (user_id, peer_id, msg_id)
+    索引: user_id; msg_id; (user_id, peer_id)
+
+event:
+    历史事件表
+    id bigint
+    self_id 用户ID/超级群ID
+    peer_id 用户ID/普通群ID
+    seq bigint 事件编号
+    msg_blob 事件类消息JSON
+    created_at int
+
+    唯一索引: (self_id, seq)
+    索引: (self_id, peer_id); self_id
+
+chat:
+    群表, 普通群group+超级群channel, 共用一个表, 通称为chat
+    id bigint
+    chat_id string
+    owner_id  群主ID
+    about  群简介
+    title  群标题
+    type 群类型: 1普通群 2超级群
+    photo 群logo
+    maxp int 群最大人数
+    muted bool 是否禁言
+    deleted 是否解散
+    created_at 创建时间
+
+    唯一索引: chat_id
+
+chat_member:
+    群组成员表, 创建者也属于管理员, 被踢和被封的不能删除;
+    id bigint
+    chat_id
+    user_id
+    name string 群昵称
+    role  角色类型 0普通成员 1管理员 2群主
+    muted 禁言 时长存redis
+    deleted  0正常 1已离开
+    created_at  加入时间
+    updated_at 离开时间/其他时间
+
+    唯一索引: (chat_id, user_id)
+    索引: chat_id; user_id
+
+channel_msgbox:
+    用来存储超级群组历史消息
+    id bigint
+    chat_id
+    msg_id  属于本群的独立消息ID
+    msg_blob blob
+    from_id  发送者
+    created_at
+
+    唯一索引: (chat_id, msg_id)
+    索引: chat_id
+
+friend_apply:
+    好友申请表(存双份)
+    id bigint
+    user_id
+    from_id 申请者
+    to_id 被申请者
+    hash varchar(40) 唯一标识md5("{from_id}:{to_id}")
+    greets json 问候语JSON数组, 每次申请只保留最新3条, 格式为[{"text":"我是XXX", "time":时间戳}]
+    name varchar(50) 申请者备注名称
+    status smallint 0等待中 1已添加 2已过期
+    updated_at int 申请时间
+
+    唯一索引: (user_id, hash)
+    索引: user_id; (from_id, to_id)
+
+friend:
+    好友表
+    id bigint
+    user_id string 主用户ID
+    peer_id string 好友ID
+    name varchar(50) 联系人昵称
+    blocked bool 是否拉黑
+    created_at int
+
+    唯一索引: (user_id, peer_id)
+    索引: user_id; peer_id
+
+setting:
+    设置表
+    id int
+    k string
+    v text
+    version int
+    updated_at

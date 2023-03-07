@@ -1,0 +1,140 @@
+OpenIM重制版设计草稿
+===================
+
+基础设施: mysql,redis,TDengine,etcd,scylladb
+
+服务类型:
+    brokersvc, 消息订阅服务(websocket).
+    apisvc, 对外提供api接口.
+    cronsvc, 定时任务服务.
+    pnsvc, (push notifications)第三方推送通知服务.
+    syssvc, 内部接口服务.
+
+详细说明:
+    - brokersvc, 提供长连接的唯一目地只用于客户端接收在线消息. 以及更新在线状态.
+    客户端发消息以及其他所有管理操作都去调接口.
+    通过redis pubsub接收在线事件消息
+    通过队列接收消息和通知
+
+    - apisvc, 提供授权接口颁发token, 其他调用通通带上token;
+    api发消息走队列, gateway消费
+
+客户端接入流程:
+    1. 从登录接口获取token, 保存下次继续用
+    2. 连接websocket服务器, 参数token
+       websocket只用来收消息, 其他所有操作都走接口
+    3. 获取对话列表, getDialogs
+    4. 打开某一对话, 根据上次已读消息ID和最新消息ID对比, 判断是否拉历史消息
+    * 客户端要本地保存每个对话的上次已读消息ID, 便于拉取历史消息
+
+消息ID:
+    单聊和普通群 共用一套ID
+    每个超级群 一套ID
+
+mysql隔离级别:
+    不可重复读
+
+发单人/普通群消息:
+  planA:
+    实时记录未读数
+    msg_id = nextMessageId()
+    dialog.zadd(peer_id, msg_id) 批量加入对话列表
+    readhistory(peer_id, max_id) 发送者标为已读
+    incrUnread(peer_id, 1) 其他人批量增加未读数
+    普通群唯一的优势就是可以删除自己的信箱消息不影响对方.
+  planB:
+    不存未读数
+    msg_id = nextMessageId()
+    chat:<chat_id>:pts = msg_id
+    readhistory(peer_id, max_id) 发送者标为已读
+    超级群的优势是不用存多份未读数, 缺点是连接层会绑定大量的channel_id.
+发超级群消息:
+    msg_id = nextChannelMessageId(chat_id)
+    chat:<chat_id>:pts = msg_id
+    readhistory(chat_id, max_id) 发送者标为已读
+最终选planA, 因为牺牲一点性能换取推送的简洁, 对于应用的定位是, 普通群控制在20个人以内, 超级群不要随意建.
+
+加载对话列表流程:
+    1. 读出所有置顶对话
+    2. 读出所有我的超级群id,pts, 并入dialog:zset
+    3. 分页加载dialogs
+    *  被踢的人不要删除对话
+    *  入群时自动标记已读=chat.pts
+    *  解散群只标记deleted, 并不删除群成员, 因为要给所有人广播最后一条解散消息
+
+Slack调研:
+    slack的在线状态称之为presence: 有away,active
+    slack的id也按首字母区分类型的, 比如U044K84QW2U, U开头的是用户id; C043NU05P1U, C开头的是频道id; T043VGQBERY, T开头的是团队id;
+        Dr044PLK0YQG, Dr开头是草稿; F044PMZHUPJ, F开头是文件; D043SHZ7SFP, D开头是单聊对话;
+    slack的在线状态走的是订阅机制.
+    免打扰叫dnd(Do not Disturb settings)
+
+优化:
+    消息缓存将来会占用大量内存, 100万条消息2G内存.
+    压力测试时会出现 connect: cannot assign requested address, benchmark客户端必须开启保持连接
+    压测性能不高, 是工具的问题, 换ab就很正常.
+    send to close channel
+    压测时开到2w连接, 触发redis: max number of clients reached, 缓存失效, 进而压力给到mysql触发: Error 1040: Too many connections.
+    redis连接数自增不减, 连接池没起作用? 连接池把6w个端口用完了, cannot assign requested address
+    nginx也会报: Cannot assign requested address; 
+    cat /proc/sys/net/ipv4/ip_local_port_range
+    用负载均衡还是会造成超时, 可能是单点问题; 开多个apisvc, 直接对各自端口压测没问题.
+    redis pubsub: 并发n次, 生产者产生n个连接, 订阅者只有1个连接.
+    ab -> api -> redis -> push, 开启10000个并发, 测试过程中会有40000个文件句柄, 测试完成后变成20000.
+    在线消息性能可以了, 现在消费能力不足, 消费时cpu也很低.
+    mysql改为批量插入后, 消费能力可达1w/s.
+
+    常用命令:
+    ss -s
+    lsof -c redis | wc -l
+    lsof -i :1840 | wc -l
+
+    压测redis:
+    redis-benchmark -h 10.10.10.179 -a tPZwGuVxsiUvWx2c9ryL -r 10000 -c 10000 -n 100000 -t get,set
+
+文件上传:
+    minio前面加imageproxy用于生成缩略图
+
+全球通讯:
+*仅适用于sdk, 业务层不管
+方案A:
+    1. 消息ID/用snowflake算法生成, 可以保证全球唯一且自增.
+    2. 离线消息用队列分发到每个DC.
+    3. 其他数据用redis/mysql异地多活技术同步.
+       redis主要是同步对话pts和用户已读ID; mysql同步user/friend/chat的写操作
+    4. 在线消息通过全球加速网络或机房直连:
+        4.1 声网SD-RTN
+        4.2 云平台数据中心之间的线路应该都是优化过的, 不用另花钱.
+    5. 在基础设置层面保持同步. 保证幂等性, redis必须考虑将增量操作替换成赋值操作. 未读数不好同步. 在线状态不好同步.
+       即使把incr换成set, 仍存在多写冲突问题. CRDT最终一致性. 
+       apache-pulsar-geo-replication
+       可以买云平台的全球多活服务, 比如阿里云Tair.
+方案B:
+    1. 消息ID/用sonyflake算法生成, 可以保证全球唯一且自增.
+    2. 在线消息通过p2p gossip实时发送到全球各节点.
+    3. 所有写API做成事件原语(timestamp,action,args), 通过pulsar分布式队列分发到各数据中心
+    4. 原语到达DC后被再次转化为API调用进行请求, 同步性的请求会加上请求头:dc=X
+    5. API处理方法中要增加对一致性的处理, 比如对同一个key做修改, 把timestamp较老的忽略掉.
+       redis中存储CRDT元信息.
+    6. 原语接口文档中需要增加一致性处理的说明.
+    7. CRDT事件需要持久保存(对象存储), 用于DC启动时恢复数据. 每隔一段时间上传一个完整镜像snapshot(redis,mysql),
+       启动时根据最新一个snapshot加这段时间的events回放录像.
+
+DAU与QPS:
+DAU=100w人, 消息量QPS=100w*100/86400=1157, btw. 我们单机QPS支持1w.
+
+scylladb:
+    支持multi-datacenters
+
+写用户手册可以用sphinx:
+    参考 https://github.com/scylladb/scylladb/blob/master/docs/Makefile
+
+TODO:
+- 研究drift的协议
+- 国外CDN用akamai, 飞书在用
+  飞书国内API: open.feishu.cn
+  time curl https://open.feishu.cn/open-apis/search/v2/data_sources/1
+  飞书国外API: open.larksuite.com
+  time curl https://open.larksuite.com/open-apis/search/v2/data_sources/1
+- ✅用Apifox做接口文档
+- 微信最大消息字数16384个字节

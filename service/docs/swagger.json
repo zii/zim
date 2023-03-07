@@ -1,0 +1,2551 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "零服务器端集成Swagger文档用于测试各个API接口，更多详情和限流请访问零服务端集成文档。\nAuthorization token 大多数的 REST API 需要权限才能访问，以格式Bearer ${token}作为请求头，其中token可以通过/{org_name}/{app_name}/token获得。",
+        "title": "零信服务器端集成Swagger文档",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/v1",
+    "paths": {
+        "/account/getChats": {
+            "post": {
+                "description": "失败响应:\n400 LIMIT_EXCEED 分页参数错误",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户体系"
+                ],
+                "summary": "用户所在群列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页偏移量, 默认0",
+                        "name": "offset",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数, 最大100",
+                        "name": "limit",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "群列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/proto.Chat"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/account/updateNotifySetting": {
+            "post": {
+                "description": "失败响应:\n400 PEER_ID_INVALID 对话不存在\n400 SETTING_INVALID 参数解析错误",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户体系"
+                ],
+                "summary": "更新对话免打扰设置",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "对话ID",
+                        "name": "peer_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "{\"badge\":true}",
+                        "description": "免打扰设置",
+                        "name": "setting",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/addUser": {
+            "post": {
+                "description": "失败响应:\n400 CHAT_DISMISSED 群已解散\n400 LIMIT_EXCEEDED 群人数已达上限\n400 NOT_MEMBER 您不是群成员\n400 MEMBER_DUPLICATED 不可添加重复的成员",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "添加成员",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "chat_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "[\"u2\"]",
+                        "description": "用户ID列表",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/create": {
+            "post": {
+                "description": "失败响应:\n400 MEMBER_ID_INVALID 初始成员不存在",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "创建新群",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "群类型(1普通群 2超级群)",
+                        "name": "type",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群标题",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群公告",
+                        "name": "about",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "[\"u2\"]",
+                        "description": "初始成员用户ID列表,最大100人",
+                        "name": "init_members",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回群ID",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/deleteUser": {
+            "post": {
+                "description": "失败响应:\n400 NOT_MEMBER 您不是群成员\n400 ACCESS_DENIED 您没有权限，需要管理员或群主",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "删除成员/退出群",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "chat_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群成员ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/dismiss": {
+            "post": {
+                "description": "失败响应:\n400 SELF_NOT_MEMBER 您不是群成员\n400 ACCESS_DENIED 您没有权限，需要管理员或群主\n400 CHAT_ID_INVALID 群不存在",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "解散群",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "chat_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/editInfo": {
+            "post": {
+                "description": "失败响应:\n400 CHAT_INVALID 群不存在\n400 NOT_MEMBER 您不是群成员\n400 ACCESS_DENIED 您没有权限，需要管理员或群主",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "修改群信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "chat_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群标题",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群公告",
+                        "name": "about",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群图标URL",
+                        "name": "photo",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/editName": {
+            "post": {
+                "description": "成功后给所有成员发送事件: EvEditMemberName\n失败响应:\n400 NAME_LONG 成员昵称过长\n400 NAME_EMPTY 成员昵称不能为空\n400 SELF_NOT_MEMBER 您不是群成员\n400 USER_NOT_MEMBER 对方不是群成员\n400 ACCESS_DENIED 您没有权限，需要管理员或群主",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "修改群成员昵称",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "chat_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群成员ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "新的成员昵称",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/editRole": {
+            "post": {
+                "description": "失败响应:\n400 SELF_NOT_MEMBER 您不是群成员\n400 USER_NOT_MEMBER 对方不是群成员\n400 ACCESS_DENIED 您没有权限，需要管理员或群主",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "修改成员角色",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "chat_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群成员ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "角色类型(0普通成员 1管理员 2群主)",
+                        "name": "role",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/getChat": {
+            "post": {
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "获取单个群详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "群信息",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/proto.Chat"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/getMembers": {
+            "post": {
+                "description": "失败响应:\n400 LIMIT_EXCEED 分页参数错误",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "群成员列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "chat_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页偏移量",
+                        "name": "offset",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数",
+                        "name": "limit",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回群成员列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/proto.Member"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/mute": {
+            "post": {
+                "description": "失败响应:\n400 NOT_MEMBER 您不是群成员\n400 ACCESS_DENIED 您没有权限，需要管理员或群主",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "全员禁言",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "chat_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "时长(0无限)",
+                        "name": "duration",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/muteUser": {
+            "post": {
+                "description": "失败响应:\n400 SELF_NOT_MEMBER 您不是群成员\n400 USER_NOT_MEMBER 对方不是群成员\n400 ACCESS_DENIED 您没有权限，需要管理员或群主",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "成员禁言",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "chat_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群成员ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "时长(0无限)",
+                        "name": "duration",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/transferOwner": {
+            "post": {
+                "description": "失败响应:\n400 SELF_NOT_MEMBER 您不是群成员\n400 USER_NOT_MEMBER 对方不是群成员\n400 ACCESS_DENIED 您没有权限，需要管理员或群主\n400 CHAT_ID_INVALID 群组不存在",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "转移群主",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "chat_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "新的群主ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/unmute": {
+            "post": {
+                "description": "失败响应:\n400 NOT_MEMBER 您不是群成员\n400 ACCESS_DENIED 您没有权限，需要管理员或群主",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "解除全员禁言",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "chat_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/unmuteUser": {
+            "post": {
+                "description": "失败响应:\n400 SELF_NOT_MEMBER 您不是群成员\n400 USER_NOT_MEMBER 对方不是群成员\n400 ACCESS_DENIED 您没有权限，需要管理员或群主",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "群组管理"
+                ],
+                "summary": "解除成员禁言",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群ID",
+                        "name": "chat_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "群成员ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/friend/accept": {
+            "post": {
+                "description": "失败响应:\n400 LIMIT_EXCEEDED 分页参数错误",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "好友(通讯录)管理"
+                ],
+                "summary": "接受好友申请",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "好友申请记录唯一标识",
+                        "name": "hash",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/friend/add": {
+            "post": {
+                "description": "双向添加成功后发送TipBecomeFriends消息\n失败响应:\n400 NAME_LONG 备注名过长\n400 USER_ID_INVALID 对方账号不存在\n400 USER_FORBIDDEN 对方账号异常，已被禁止登录\n400 LIMIT_EXCEEDED 您的好友数量已达上限\n400 PEER_LIMIT_EXCEEDED 对方好友数量已达上限",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "好友(通讯录)管理"
+                ],
+                "summary": "直接添加好友",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "对方用户ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "好友备注名",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否添加双向好友",
+                        "name": "mutal",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/friend/block": {
+            "post": {
+                "description": "失败响应:\n400 USER_ID_EMPTY 参数为空",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "好友(通讯录)管理"
+                ],
+                "summary": "屏蔽联系人",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "对方用户ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/friend/deleteApply": {
+            "post": {
+                "description": "失败响应:\n400 HASH_EMPTY 参数为空",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "好友(通讯录)管理"
+                ],
+                "summary": "删除好友申请",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "申请记录唯一标识",
+                        "name": "hash",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/friend/edit": {
+            "post": {
+                "description": "失败响应:\n400 NOT_FRIEND 对方不是您的好友\n400 NAME_LONG 备注名过长",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "好友(通讯录)管理"
+                ],
+                "summary": "修改好友信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "好友ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "备注名",
+                        "name": "name",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/friend/editApply": {
+            "post": {
+                "description": "失败响应:\n400 NAME_LONG 备注名过长\n400 HASH_INVALID 申请记录不存在\n400 STATUS_INVALID 申请状态错误",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "好友(通讯录)管理"
+                ],
+                "summary": "修改好友申请信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "申请记录唯一标识",
+                        "name": "hash",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "备注名",
+                        "name": "name",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/friend/getApplyList": {
+            "post": {
+                "description": "包括我邀请别人的记录和别人邀请我的记录, 按申请时间倒序排列翻页\n失败响应:\n400 LIMIT_EXCEED 分页参数错误",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "好友(通讯录)管理"
+                ],
+                "summary": "获取好友申请列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "分页偏移",
+                        "name": "offset",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数",
+                        "name": "limit",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回申请记录列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/proto.FriendApply"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/friend/getBlocked": {
+            "post": {
+                "description": "失败响应:\n400 LIMIT_EXCEED 分页参数错误",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "好友(通讯录)管理"
+                ],
+                "summary": "黑名单列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回黑名单好友列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/proto.Friend"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/friend/getFriends": {
+            "post": {
+                "description": "失败响应:\n400 LIMIT_EXCEED 分页参数错误",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "好友(通讯录)管理"
+                ],
+                "summary": "全部好友的列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回全部好友列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/proto.Friend"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/friend/invite": {
+            "post": {
+                "description": "如果对方已添加自己, 发送TipBecomeFriends, 直接成为好友; 否则#friend给to_id发送消息, 收到在通讯录按钮显示小红点\n失败响应:\n400 GREET_LONG 问候语过长\n400 NAME_LONG 备注名过长\n400 TO_ID_INVALID 对方账号不存在\n400 USER_FORBIDDEN 对方账号异常，已被禁止登录\n400 LIMIT_EXCEEDED 您的好友数已达上限\n400 DUPLICATED_APPLY 重复邀请",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "好友(通讯录)管理"
+                ],
+                "summary": "发起好友申请",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "被邀请用户ID",
+                        "name": "to_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "问候语",
+                        "name": "greet",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "备注名",
+                        "name": "name",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回申请记录",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/proto.FriendApply"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/friend/remove": {
+            "post": {
+                "description": "同时删除好友申请记录, 删除对话, 聊天记录\n失败响应:\n400 USER_ID_EMPTY 参数为空",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "好友(通讯录)管理"
+                ],
+                "summary": "移除好友",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "好友ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否发生数据变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/friend/unblock": {
+            "post": {
+                "description": "失败响应:\n400 USER_ID_EMPTY 参数为空",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "好友(通讯录)管理"
+                ],
+                "summary": "解除屏蔽联系人",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "好友ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否发生数据变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sys/authToken": {
+            "post": {
+                "description": "失败响应:\n400 USER_ID_INVALID 用户账号不存在\n400 FORBIDDEN 用户账号异常，已被禁止登录",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务端集成"
+                ],
+                "summary": "后台授权新token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "平台类型(1:IOS 2:ANDROID 3:WEB 4:DESKTOP)",
+                        "name": "platform",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "设备ID, 用来做推送通知",
+                        "name": "device_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回授权结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/proto.Authorization"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sys/ban": {
+            "post": {
+                "description": "强制登出用户, 删除所有token; 下次授权时自动FORBIDDEN\n失败响应:\n400 USER_STATUS_INVALID 用户账号异常",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务端集成"
+                ],
+                "summary": "禁用用户账号",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "用户ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有数据变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sys/disconnect": {
+            "post": {
+                "description": "失败响应:\n400 USER_ID_EMPTY 参数为空",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务端集成"
+                ],
+                "summary": "强制用户断线",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "用户ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "(可选)具体到设备",
+                        "name": "token",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "参考*断线原因*",
+                        "name": "reason",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有数据变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sys/editUser": {
+            "post": {
+                "description": "失败响应:\n400 USER_ID_EMPTY 参数为空",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务端集成"
+                ],
+                "summary": "修改用户资料",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "用户ID",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "昵称",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "头像URL",
+                        "name": "photo",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "自定义信息",
+                        "name": "ex",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有数据变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sys/logout": {
+            "post": {
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务端集成"
+                ],
+                "summary": "强制登出用户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "对方用户token",
+                        "name": "token",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有数据变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sys/register": {
+            "post": {
+                "description": "失败响应:\n400 NAME_EMPTY 昵称不能为空",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务端集成"
+                ],
+                "summary": "后台创建im用户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "昵称",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "头像URL",
+                        "name": "photo",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "自定义信息",
+                        "name": "ex",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回用户ID",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sys/sendMessage": {
+            "post": {
+                "description": "失败响应:\n400 MESSAGE_INVALID 消息无法解析\n400 FROM_ID_INVALID 发送者账号不存在\n400 FROM_USER_BANNED 发送者账号异常",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务端集成"
+                ],
+                "summary": "后台发消息接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "{\"type\": 101, \"from_id\":\"#friend\", \"to_id\":\"u4\", \"elem\":{\"text\": \"你好1\"}}",
+                        "description": "消息结构",
+                        "name": "message",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回消息ID",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sys/unban": {
+            "post": {
+                "description": "失败响应:\n400 USER_STATUS_INVALID 用户状态不正确",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务端集成"
+                ],
+                "summary": "解除禁用用户账号",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "用户ID",
+                        "name": "user_id",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回是否有数据变更",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/upload/getCredential": {
+            "post": {
+                "description": "Token自颁发后将在一段时间内有效(timeout), 并在有效期内重复使用\n失败响应:\n400 异常信息",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "其他"
+                ],
+                "summary": "获取直传凭证",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回直传凭证",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/proto.Credential"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/user/getUser": {
+            "post": {
+                "description": "失败响应:\n400 ID_EMPTY 参数为空",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "其他"
+                ],
+                "summary": "获取单个用户详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "用户ID",
+                        "name": "id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回单个用户模型",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/proto.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/user/getUsers": {
+            "post": {
+                "description": "失败响应:\n400 LIMIT_EXCEEDED 超过单次最大查询人数上限",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "其他"
+                ],
+                "summary": "批量获取多个用户详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "授权token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "[\"u2\"]",
+                        "description": "用户ID的JSON数组",
+                        "name": "id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回用户列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/proto.Success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/proto.User"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "proto.Authorization": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "description": "授权token",
+                    "type": "string"
+                }
+            }
+        },
+        "proto.Chat": {
+            "type": "object",
+            "properties": {
+                "about": {
+                    "description": "群公告",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "群ID",
+                    "type": "string"
+                },
+                "maxp": {
+                    "description": "人数上限, 0无限",
+                    "type": "integer"
+                },
+                "muted": {
+                    "description": "是否全员禁言",
+                    "type": "boolean"
+                },
+                "owner_id": {
+                    "description": "群主ID",
+                    "type": "string"
+                },
+                "photo": {
+                    "description": "群图标",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "群标题",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "群类型, 1普通群, 2超级群",
+                    "type": "integer"
+                }
+            }
+        },
+        "proto.CosCred": {
+            "description": "参考文档: https://cloud.tencent.com/document/product/436/9067",
+            "type": "object",
+            "properties": {
+                "bucket": {
+                    "description": "桶名",
+                    "type": "string",
+                    "example": "cat1-1254751699"
+                },
+                "region": {
+                    "description": "区域名",
+                    "type": "string",
+                    "example": "ap-nanjing"
+                },
+                "secret_id": {
+                    "description": "临时key",
+                    "type": "string"
+                },
+                "secret_key": {
+                    "description": "临时secret",
+                    "type": "string"
+                },
+                "timeout": {
+                    "description": "过期秒数, 默认3600",
+                    "type": "integer"
+                },
+                "token": {
+                    "description": "sessionToken",
+                    "type": "string"
+                }
+            }
+        },
+        "proto.Credential": {
+            "type": "object",
+            "properties": {
+                "cos": {
+                    "$ref": "#/definitions/proto.CosCred"
+                },
+                "minio": {
+                    "$ref": "#/definitions/proto.MinioCred"
+                },
+                "obs": {
+                    "$ref": "#/definitions/proto.ObsCred"
+                },
+                "oss": {
+                    "$ref": "#/definitions/proto.OssCred"
+                },
+                "platform": {
+                    "description": "平台类型(oss阿里云,obs华为云,cos腾讯云,minio)",
+                    "type": "string"
+                }
+            }
+        },
+        "proto.Friend": {
+            "type": "object",
+            "properties": {
+                "blocked": {
+                    "description": "是否被拉黑",
+                    "type": "boolean"
+                },
+                "letter": {
+                    "description": "昵称首字母",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "备注昵称",
+                    "type": "string"
+                },
+                "user": {
+                    "description": "好友用户信息",
+                    "$ref": "#/definitions/proto.User"
+                },
+                "user_id": {
+                    "description": "用户ID",
+                    "type": "string"
+                }
+            }
+        },
+        "proto.FriendApply": {
+            "type": "object",
+            "properties": {
+                "from_id": {
+                    "description": "申请者ID",
+                    "type": "string"
+                },
+                "greets": {
+                    "description": "问候语列表, 最新3条",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/proto.Greet"
+                    }
+                },
+                "hash": {
+                    "description": "申请标识(唯一)",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "申请者备注名称",
+                    "type": "string"
+                },
+                "peer_user": {
+                    "description": "对方用户信息",
+                    "$ref": "#/definitions/proto.User"
+                },
+                "status": {
+                    "description": "状态(0等待验证 1已添加 2已过期)",
+                    "type": "integer"
+                },
+                "to_id": {
+                    "description": "被邀请者ID",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "申请时间戳, 每次申请都会更新",
+                    "type": "integer"
+                }
+            }
+        },
+        "proto.Greet": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "description": "问候语文本",
+                    "type": "string"
+                },
+                "time": {
+                    "description": "发送时间",
+                    "type": "integer"
+                }
+            }
+        },
+        "proto.Member": {
+            "type": "object",
+            "properties": {
+                "muted": {
+                    "description": "是否被禁言",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "成员昵称",
+                    "type": "string"
+                },
+                "role": {
+                    "description": "角色(0普通成员 1管理员 2创建者)",
+                    "type": "integer"
+                },
+                "user": {
+                    "description": "成员用户信息",
+                    "$ref": "#/definitions/proto.User"
+                }
+            }
+        },
+        "proto.MinioCred": {
+            "type": "object",
+            "properties": {
+                "access_id": {
+                    "type": "string"
+                },
+                "access_key": {
+                    "type": "string"
+                },
+                "bucket": {
+                    "type": "string"
+                },
+                "endpoint": {
+                    "type": "string"
+                },
+                "final_host": {
+                    "type": "string"
+                },
+                "timeout": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "proto.ObsCred": {
+            "description": "参考文档: https://support.huaweicloud.com/bestpractice-obs/obs_05_1203.html",
+            "type": "object",
+            "properties": {
+                "signed_url": {
+                    "description": "预签名URL",
+                    "type": "string"
+                },
+                "timeout": {
+                    "description": "过期秒数, 默认3600",
+                    "type": "integer"
+                }
+            }
+        },
+        "proto.OssCred": {
+            "type": "object",
+            "properties": {
+                "access_key_id": {
+                    "description": "临时key",
+                    "type": "string",
+                    "example": "STS.NTp74bN1Z5JNgjjqhqnZPqVYJ"
+                },
+                "access_key_secret": {
+                    "description": "临时secret",
+                    "type": "string",
+                    "example": "8acGDXgdLmPNcZmmoKEKmeCqjQz5SVWnYqq556YKL26d"
+                },
+                "bucket": {
+                    "description": "桶名",
+                    "type": "string",
+                    "example": "im1"
+                },
+                "endpoint": {
+                    "description": "oss节点域名",
+                    "type": "string",
+                    "example": "oss-cn-guangzhou.aliyuncs.com"
+                },
+                "final_host": {
+                    "description": "最终文件URL前缀",
+                    "type": "string",
+                    "example": "http://openim1.oss-accelerate.aliyuncs.com"
+                },
+                "timeout": {
+                    "description": "过期秒数, 默认3600",
+                    "type": "integer",
+                    "example": 3600
+                },
+                "token": {
+                    "description": "上传用的token, 较长",
+                    "type": "string"
+                }
+            }
+        },
+        "proto.Success": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "data": {},
+                "msg": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "proto.User": {
+            "type": "object",
+            "properties": {
+                "ex": {
+                    "description": "用户扩展信息",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "用户ID",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "用户昵称",
+                    "type": "string"
+                },
+                "photo": {
+                    "description": "用户头像",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "用户状态(0正常 1禁用)",
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

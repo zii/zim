@@ -1,0 +1,14 @@
+.DS_Store
+.idea
+bin/dev/zimapi
+vendor
+bin/dev/tl
+/bin/dev/zimpush
+test/test-kafka/test-kafka
+test/benchmark/benchmark
+*.dump
+bin/dev/zimcron
+config.toml
+bin/dev/zimbroker
+test/test-pb/test-pb
+*.wasm

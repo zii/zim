@@ -1,0 +1,99 @@
+[zim]
+# 是否启用多数据中心模式, 部署前定好
+multiDC = false
+
+[rpcx]
+# rpcx server listening port
+port = 1850
+
+[[mysql]]
+name = "master"
+dsn = "root:openIM@tcp(10.10.10.86:3306)/zim?charset=utf8mb4&autocommit=1&parseTime=true"
+maxOpen = 0
+maxIdle = 500
+maxLife = 300
+
+[[mysql]]
+name = "slave"
+dsn = "root:openIM@tcp(10.10.10.86:3306)/zim?charset=utf8mb4&autocommit=1&parseTime=true"
+maxOpen = 0
+maxIdle = 500
+maxLife = 300
+
+[[redis]]
+name = "cache"
+addr = "10.10.10.86:6379"
+idle = 100
+active = 0
+dialTimeout = 5000
+readTimeout = 5000
+writeTimeout = 5000
+idleTimeout = 3600
+dbNum = 3
+password = ""
+
+[[redis]]
+name = "speed"
+addr = "10.10.10.86:6379"
+idle = 100
+active = 0
+dialTimeout = 5000
+readTimeout = 5000
+writeTimeout = 5000
+idleTimeout = 3600
+dbNum = 4
+password = ""
+
+[[redis]]
+name = "pubsub"
+addr = "10.10.10.86:6379"
+idle = 100
+active = 0
+dialTimeout = 5000
+readTimeout = 0 # 特别不设超时
+writeTimeout = 5000
+idleTimeout = 3600
+dbNum = 3
+password = ""
+
+[kafka]
+enable = true # 如果关闭, 则不使用kafka而走原生go协程
+brokers = ["10.10.10.86:9092"]
+level1Topic = "zim-level1" # 一级队列: redis
+level1Group = "zim-level1" # 一级队列消费者组ID
+level2Topic = "zim-level1" # 二级队列: mysql
+level2Group = "zim-level2" # 二级队列消费者组ID
+
+# 选择对象存储平台类型: oss(阿里云)/obs(华为云)/cos(腾讯云)/minio
+[objStorage]
+platform = "oss"
+
+[oss]
+accessKeyID = "LTAI5t8bJGHXeVAXanzGz5QF"
+accessKeySecret = ""
+endpoint = "oss-cn-guangzhou.aliyuncs.com"
+bucket = "openim1"
+bucketHost = "http://openim1.oss-accelerate.aliyuncs.com"
+roleArn = "acs:ram::1148165249088458:role/ramosstest"
+
+[obs]
+accessKey = "V6ED0G06OAUBLSU2C5F5"
+secretKey = ""
+endpoint = "obs.cn-north-4.myhuaweicloud.com"
+bucket = "lzf2"
+bucketHost = "https://lzf2.obs.cn-north-4.myhuaweicloud.com"
+
+[cos]
+secretID = "AKID62j9xc3EBtMZWEjyxgAPO7cssd8PPAgy"
+secretKey = ""
+region = "ap-nanjing"
+bucket = "cat1-1254751699"
+bucketHost = ""
+
+[minio]
+accessKeyID = "user12345"
+secretAccessKey = "key12345"
+region = "us-east-1"
+bucket = "buck1"
+endpoint = "http://10.10.10.86:9000"
+bucketHost = ""

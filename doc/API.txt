@@ -1,0 +1,495 @@
+API接口
+
+[API SERVICE]
+默认都是POST方法访问
+
+[接口地址]
+https://<HOST>/v1/<PATH>
+wss://<HOST>/ws?token=<TOKEN>
+
+[ID前缀规则]
+    u123456 用户
+    g123456 普通群
+    c123456 超级群
+    #XXXXXX 系统ID
+
+[系统ID]
+    以#开头的ID作为隐藏用户, 借由现有的消息机制, 实现具有多端同步和离线属性的功能, 比如全局通知/小红点.
+    对话列表不显示系统ID的对话. 系统ID名字根据业务来定, 目前有下列ID:
+    #friend: 在线收到消息或对话unread>0, 通讯录菜单显示小红点, 点击后标记已读, 具体收到什么消息不重要;
+    #setting: 如上, 设置菜单显示小红点;
+
+[客户端平台类型]
+platform:
+    1 IOS
+    2 ANDROID
+    3 WEB
+    4 DESKTOP
+
+[名词解释]
+peer_id: 对话的对象, 用户ID或群ID
+dialog: 对话, 一个peer_id确定一个对话
+pts: 对话最新消息ID
+seq: 事件ID
+chat: 群(普通群/超级群)
+channel: 超级群
+
+[加密]
+DH算法约定素数p和原根g:
+p: 0xFFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AACAA68FFFFFFFFFFFFFFFF
+g: 2
+
+AES加密解密方案1:
+1. 加密套件选用AES-256-GCM, key:长度32字节, nonce:长度12字节
+2. 先用DH交换过来一个256字节的共享密钥shared_key, 让gcm_key=shared_key[:32]
+3. gcm_key和token绑定, 退出登录后清掉
+4. 客户端发送API请求, 将json格式参数用AES编码, 再加base64, 作为request body
+5. 服务端响应API请求, 将json格式结果用AES编码, 再加base64, 作为response body
+6. 每次请求用请求头签名前12个字符作为gcm_nonce, sign[:12]
+
+AES加密解密方案2:
+1. gcm_key=appsecret
+2. API nonce=sign[:12]; Websocket nonce=token[:12]
+3. 根据appkey判断是否加密, 如果appkey为空或没绑定secret, 则不用加密
+
+--- request headers ---
+
+appkey: 客户端事先注册appkey和appsecret, 服务器可以获取客户端类型和版本号 如android/1.3
+timestamp: 时间戳(秒), 用于防止重放攻击, 服务端判断abs(timestamp-服务端时间)<=5min
+sign: 签名sign=SHA1(path+timestamp+appsecret), 每次请求都重新计算, 用于防爬虫脚本.
+token: (登录后用到)令牌
+
+--- type ---
+
+// core types
+  code: 
+    常用错误码:
+    200 成功
+    401 登录已过期
+    410 被其他设备登录
+    420 许可证已过期
+    403 APPKEY_INVALID
+    403 FORBIDDEN 您的账号存在异常，已被限制登录
+    429 RATE_LIMIT / Too many requests
+    400 一般错误
+    400 USER_FORBIDDEN 对方账号异常，已被限制登录
+  msg:成功success
+response# code:int data:json msg:string;
+
+// 用户简单信息
+TinyUser# id:string name:string;
+
+// 用户基本信息 name:昵称 photo:头像URL ex:业务层自定义信息 status:状态(0正常 1禁用)
+User# id:string name:string photo:string ex:string status:int;
+
+// 群基本信息 type:1普通群 2超级群 owner_id:群主ID photo:群图标 maxp:人数上限
+    muted:全员禁言 deleted:已解散
+Chat# id:string type:int title:string about:string owner_id:string
+    photo:string maxp:int muted:bool deleted:bool;
+
+// 阿里oss直传凭证
+    endpoint: oss节点域名, 例如oss-cn-guangzhou.aliyuncs.com
+    access_key_id: 临时key, 例如STS.NTp74bN1Z5JNgjjqhqnZPqVYJ
+    access_key_secret: 临时secret, 例如8acGDXgdLmPNcZmmoKEKmeCqjQz5SVWnYqq556YKL26d
+    token: 上传用的token, 较长
+    timeout: 过期秒数, 默认3600
+    bucket: 桶名, 例如openim1
+    final_host: 最终文件URL前缀, 例如http://openim1.oss-accelerate.aliyuncs.com
+OssCred# endpoint:string access_key_id:string access_key_secret:string token:string timeout:int bucket:string final_host:string;
+
+// 华为obs直传凭证 
+    signed_url:预签名URL
+    timeout: 过期秒数, 默认3600
+   参考文档: https://support.huaweicloud.com/bestpractice-obs/obs_05_1203.html
+ObsCred# signed_url:string timeout:int;
+
+// 腾讯云cos直传凭证
+    参考文档: https://cloud.tencent.com/document/product/436/9067
+    bucket: 桶名, cat1-1254751699
+    region: 区域名, ap-nanjing
+    secret_id: 临时key
+    secret_key: 临时secret
+    token: sessionToken
+    timeout: 过期秒数, 默认3600
+CosCred# bucket:string region:string secret_id:string secret_key:string token:string timeout:int;
+
+// Minio直传凭证
+MinioCred# endpoint:string bucket:string final_host:string access_id:string access_key:string token:string;
+
+// 直传凭证 platform:平台(oss阿里云,obs华为云,cos腾讯云,minio)
+Credential# platform:string oss:OssCred obs:ObsCred cos:CosCred minio:MinioCred;
+
+// 问候语 text:问候语文本 time:发送时间
+Greet# text:string time:int;
+
+// 用户免打扰设置
+    badge:是否将未读数显示为小红点(true显示小红点 false显示未读数)
+PeerNotifySetting# badge:bool;
+
+// 图片消息格式
+PhotoElem# big:string small:string;
+
+// 音频消息格式
+SoundElem# url:string;
+
+// 视频消息格式
+VideoElem# url:string snapshot:string;
+
+// 文件消息格式
+FileElem# url:string;
+
+// @消息格式
+MentionElem# text:string users:[TinyUser];
+
+// 位置消息格式 long:经度 lat:纬度
+LocationElem# long:double lat:double;
+
+// 引用消息
+QuoteElem# text:string msg:Message;
+
+// 撤消消息
+RevokeElem# msg_id:long;
+
+// 聊天记录(合并转发用到) title:XX的聊天记录
+ChatLogElem# title:string msgs:[Message];
+
+// 常规消息元素
+Elem# text:string photo:PhotoElem sound:SoundElem video:VideoElem
+    file:FileElem mention:MentionElem location:locationElem quote:QuoteElem 
+    revoke:RevokeElem custom:string chat_log:ChatLogElem;
+
+// 群创建成功提示
+TipChatCreated# chat:Chat creator:User init_members:[User];
+
+// 新成员加入群提示
+    inviter:邀请人信息, 如果不为空, 提示"xxx"邀请"xxx"进群
+TipMemberEnter# chat_id:string users:[User] role:int inviter:TinyUser;
+
+// 成员退出提示
+TipMemberQuit# chat_id:string user:TinyUser;
+
+// 群主转移提示
+TipOwnerTransfer# chat_id:string new_owner:User old_owner:User;
+
+// 移除成员提示
+TipMemberKicked# chat_id:string user:TinyUser;
+
+// 成员禁言/解禁提示 enable:true禁言 false解禁 duration:持续秒数(0无限期)
+TipMemberMuted# chat_id:string enable:bool user:TinyUser duration:int;
+
+// 群禁言/解禁提示 enable:true禁言 false解禁 duration:持续秒数(0无限期)
+TipChatMuted# chat_id:string enable:bool duration:int;
+
+// 群修改成员角色提示 role:0普通成员 1管理员
+TipEditRole# chat_id:string user:TinyUser role:int;
+
+// 群解散提示
+TipDismissed# chat_id:string;
+
+// 成为好友提示
+    界面以文本消息的形式显示问候语.
+    界面显示提示"以上是打招呼内容"
+    界面显示"你已添加了<对方昵称>，现在可以开始聊天了。"
+    from_id:邀请者ID to_id:被邀请者ID
+TipBecomeFriends# greets:[Greet] from_id:string to_id:string;
+
+// 提示类消息
+Tip# chat_created:TipChatCreated member_enter:TipMemberEnter member_quit:TipMemberQuit
+    owner_transfer:TipOwnerTransfer member_kicked:TipMemberKicked 
+    member_muted:TipMemberMuted chat_muted:TipChatMuted edit_role:TipEditRole
+    dismissed:TipDismissed become_friends:TipBecomeFriends;
+
+// 自己已读(自己读了别人的消息, 多端同步用) max_id:对话最新消息ID unread:剩余未读数
+EvHasRead# peer_id:string max_id:long unread:int;
+
+// 正在输入 对话peer_id user:对方名称
+EvTyping# peer_id:string user:TinyUser;
+
+// 强制断线 reason:原因
+    LOGOUT          主动登出
+    OTHER_ONLINE    其他设备上线
+    BANNED          被封禁
+    DUPLICATED      重复连接
+    TOKEN_INVALID   TOKEN失效
+// 由CmdDisconnect触发, 凡是收到该事件的客户端都停止自动重连, 界面上提示断线原因
+EvDisconnect# reason:string;
+
+// 主动退出群
+EvQuitChat# chat_id:string;
+
+// 删除消息
+EvMsgDeleted# peer_id:string msg_id:[long];
+
+// 已读回执
+    peer_id:对话的对象(用户ID或群ID) max_id:最新被标记为已读的消息ID(小于这个ID的消息都显示个对号)
+EvReceipt# peer_id:string max_id:long;
+
+// 修改成员昵称 
+    user_id:成员ID name:成员昵称
+EvMemberName# chat_id:string user_id:string name:string;
+
+// 清空对话聊天记录
+    (同时标记已读)
+    max_id:当时的最大消息ID(清空<=max_id的聊天记录)
+EvDialogClear# peer_id:string max_id:long;
+
+// 删除对话事件 peer_id:对方ID clear:是否清空聊天记录 max_id:当时的最大消息ID(清空<=max_id的聊天记录)
+EvDialogDeleted# peer_id:string clear:bool max_id:long;
+
+// 置顶对话事件 peer_id:对话对方ID pinned:置顶状态,true置顶,false取消置顶
+EvPinDialog# peer_id:string pinned:bool;
+
+// 更新免打扰设置事件 
+EvUpdatePeerNotify# peer_id:string notify_setting:PeerNotifySetting;
+
+// 事件 seq:事件序号(在事件seq为0)
+Event# seq:long has_read:EvHasRead typing:EvTyping disconnect:EvDisconnect quit_chat:EvQuitChat
+    msg_deleted:EvMsgDeleted receipt:EvReceipt member_name:EvMemberName dialog_clear:EvDialogClear
+    dialog_deleted:EvDialogDeleted pin_dialog:EvPinDialog peer_notify:EvUpdatePeerNotify;
+
+// 转发信息 from_id:源头用户ID from_name:源头用户昵称 msg_id:源头消息ID
+FwdHeader# from_id:string from_name:string chat_id:string msg_id:long;
+
+// 消息 id:消息唯一ID(递增)
+    from_id:发送者ID(用户) to_id:接收者ID(用户或群)
+    type:消息类型 {
+        常规消息  type=1XX
+            文本消息     101
+            图片消息     102
+            语音消息     103
+            视频消息     104
+            文件消息     105
+            At消息      106
+            引用消息     107
+            撤销消息     108
+            聊天记录     109
+            自定义消息   190
+        提示类消息  type=2XX 比如邀请加群退群, 用灰色框展示
+            群创建成功   201 TipChatCreated
+            成员加入     202 TipMemberEnter
+            成员退出     203 TipMemberQuit
+            群主转移     204 TipOwnerTransfer
+            移除成员     205 TipMemberKicked
+            成员禁言     206 TipMemberMuted
+            群禁言       207 TipChatMuted
+            修改成员角色  208 TipEditRole
+            *转接会话    209 TipSessionTransfer
+            群解散       210 TipDismissed
+            成为好友     211 TipBecomeFriends
+        事件类消息  type=3XX 并非消息, 只是一种行为
+            标记自己已读  301 EvHasRead
+            正在输入      302 EvTyping
+            强制离线      303 EvDisconnect
+            主动退出群    304 EvQuitChat
+            删除消息      305 EvMsgDeleted (存离线)
+            已读回执      306 EvReceipt
+            更新成员昵称   307 EvMemberName
+            清空聊天记录   308 EvDialogClear (存离线)
+            删除对话      309 EvDialogDeleted
+            置顶对话      310 EvPinDialog
+            更新免打扰设置 311 EvUpdatePeerNotify
+    }
+    revoked: 是否已撤消
+    fwd_header: 转发头
+    created_at:消息发送时间
+Message# id:long type:int from_id:string from_user:User to_id:string fwd_header:FwdHeader elem:Elem tip:Tip event:Event 
+    revoked:bool created_at:int;
+
+// 对话
+    peer_id:以#开头的, 用来接收离线事件, 界面上不显示
+        #friend: 通讯录出红点用
+    pinned: 是否置顶
+    pts:最新消息ID top_message:最新消息 receipt_max_id:最大已读回执消息ID seq:最新事件ID notify_setting:免打扰设置
+Dialog# peer_id:string peer_user:User peer_chat:Chat pinned:bool pts:long top_message:Message unread:int receipt_max_id:long 
+    seq:long notify_setting:PeerNotifySetting;
+
+// 对话列表 total:总条数(该值只在第一页提供)
+Dialogs# dialogs:[Dialog] total:int;
+
+// 踢掉在线用户 token:(可选)具体到某个设备
+CmdDisconnect# user_id:string token:string reason:string;
+
+// 给pushsvc的内部命令
+    op: send发消息, disconnect踢掉在线用户
+Command# op:string user_ids:[string] message:Message cmd_disconnect:CmdDisconnect;
+
+// 对话已读结果 pts:对话最新消息ID unread:剩余未读数
+AffectedHistory# pts:long unread:int;
+
+// 群成员 name:成员昵称 muted:是否被禁言 role:角色(0普通成员 1管理员 2创建者)
+Member# user:User name:string muted:bool role:int;
+
+// 好友申请记录
+    hash:申请标识(唯一)
+    from_id:申请者ID
+    peer_user:对方用户信息
+    to_id:被邀请者ID
+    greets:问候语列表, 最新3条
+    name:申请者备注名称
+    status:状态(0等待验证 1已添加 2已过期)
+    updated_at:申请时间戳, 每次申请都会更新
+FriendApply# hash:string from_id:string peer_user:User to_id:string greets:[Greet] name:string status:int updated_at:int;
+
+// 好友 user_id:用户ID name:备注昵称 blocked:是否被拉黑 letter:昵称首字母
+Friend# user_id:string name:string user:User blocked:bool letter:string;
+
+--- function ---
+
+# ✅获取直传凭证
+    Token自颁发后将在一段时间内有效(timeout), 并在有效期内重复使用
+upload.getCredential# = Credential;
+
+# ✅发消息接口 message:id,from_id不用填 返回消息ID
+    用户只能发常规类(1XX)消息
+    如发信人是自己, 服务器会自动标记当前对话为已读
+message.sendMessage# message:Message = long;
+
+# ✅拉取对话历史消息
+    min_id:本机消息ID
+    max_id:服务端消息ID, 0最新
+    拉取范围=(min_id, max_id)
+    拉取对话历史消息时会自动标记已读, 待商榷
+message.pullHistory# peer_id:string max_id:long min_id:long offset:int limit:int = [Message];
+
+# ✅标记对话已读 max_id:我看到的最新消息ID
+message.readHistory# peer_id:string max_id:long = AffectedHistory;
+
+# ✅获取对话列表
+    offset: Offset from the 1st record of the list (default is 0).
+    limit: Number of records returned (maximum is 200, default is 20).
+message.getDialogs# offset:int limit:int = Dialogs;
+
+# ✅切换对话置顶状态
+    peer_id:对话对方ID
+    pinned:开关, true置顶 false取消置顶
+    成功后发送多端同步事件: EvPinDialog
+message.pinDialog# peer_id:string pinned:bool = bool;
+
+# ✅拉取离线事件
+    peer_id:如果peer_id不为空, 则代表对话内部的事件(比如删除消息); peer_id为空代表全局事件
+    min:本机seq
+    max:服务端seq, 0最新
+    * 先对比, 如果本机seq<服务端seq, 才需要调这个函数. 拉取范围=(min, max], 在这个范围内分页.
+    * 首次登录, 本机无需拉取事件列表, 直接保存seq即可
+    * 事件列表按从旧到新排序
+    返回: 事件类消息列表
+message.pullEvents# peer_id:string min:long max:long offset:int limit:int = [Message];
+
+# ✅删除消息
+message.deleteMessages# peer_id:string id:[long] = bool;
+
+# ✅转发消息
+    to_id:接收者列表
+    peer_id:对话对象ID
+    msg_id:对话消息ID列表
+    merge:true合并转发 false逐条转发
+message.forwardMessages# to_id:[string] peer_id:string msg_id:[long] merge:bool = bool;
+
+# ✅清空对话聊天记录 (单向)
+    适用于单聊和普通群, 成功后发送多端同步事件EvDialogClear
+message.clearDialog# peer_id:string = bool;
+
+# ✅删除对话 (单向)
+    clear:是否清空聊天记录, 不支持清空超级群的聊天记录
+    成功后删除免打扰设置, 清空聊天记录, 多端同步事件EvDialogDeleted
+message.deleteDialog# peer_id:string clear:bool = bool;
+
+# ✅发起好友申请 
+    如果对方已添加自己, 发送TipBecomeFriends, 直接成为好友; 否则#friend给to_id发送消息, 收到在通讯录按钮显示小红点
+    to_id:被邀请者ID greet:打招呼文本 name:备注昵称
+friend.invite# to_id:string greet:string name:string = FriendApply;
+
+# ✅接受好友申请 成功后发送TipBecomeFriends消息
+friend.accept# hash:string = bool;
+
+# ✅修改好友申请信息
+friend.editApply# hash:string name:string = bool;
+
+# ✅删除好友申请 (单向)
+friend.deleteApply# hash:string = bool;
+
+# ✅获取好友申请列表 包括我邀请别人的记录和别人邀请我的记录, 按申请时间倒序排列翻页
+friend.getApplyList# offset:int limit:int = [FriendApply];
+
+# ✅直接添加好友 双向添加成功后发送TipBecomeFriends消息
+    mutal:是否添加双向好友 name:备注名称
+friend.add# user_id:string name:string mutal:bool = bool;
+
+# ✅修改好友信息
+    name:备注名称
+friend.edit# user_id:string name:string = bool;
+
+# ✅移除好友
+    同时删除好友申请记录, 删除对话, 聊天记录
+friend.remove# user_id:string = bool;
+
+# ✅获取所有好友列表 (未拉黑)
+friend.getFriends# = [Friend];
+
+# ✅屏蔽联系人
+friend.block# user_id:string = bool;
+
+# ✅解除屏蔽联系人
+friend.unblock# user_id:string = bool;
+
+# ✅黑名单列表
+friend.getBlocked# = [Friend];
+
+# ✅获取单个用户详情
+user.getUser# id:string = User;
+
+# ✅批量获取多个用户详情
+    id:[用户ID数组] 最大100条
+user.getUsers# id:[string] = User;
+
+# ✅获取我所在的群列表
+account.getChats# offset:int limit:int = [Chat];
+
+# ✅更新对话免打扰设置
+    peer_id:对话对方ID
+    setting:免打扰设置
+    成功后发送多端同步事件: EvUpdatePeerNotify
+account.updateNotifySetting# peer_id:string setting:PeerNotifySetting = bool;
+
+# ✅获取单个群详情
+chat.getChat# id:string = Chat;
+
+# ✅创建新群 返回群ID type:群类型(1普通群 2超级群) init_members:[初始群成员]
+chat.create# type:int title:string about:string init_members:[string] = string;
+
+# ✅添加成员
+chat.addUser# chat_id:string user_id:[string] = bool;
+
+# ✅群成员列表
+chat.getMembers# chat_id:string offset:int limit:int = [Member];
+
+# ✅修改群信息
+chat.editInfo# chat_id:string title:string about:string photo:string = bool;
+
+# ✅修改群成员昵称 同时给所有成员发送事件: EvEditMemberName
+    name:群昵称(最大50个字节)
+chat.editName# chat_id:string user_id:string name:string = bool;
+
+# ✅删除成员/退出群
+chat.deleteUser# chat_id:string user_id:string = bool;
+
+# ✅全员禁言 duration:时长(0无限)
+chat.mute# chat_id:string duration:int = bool;
+
+# ✅解除全员禁言
+chat.unmute# chat_id:string = bool;
+
+# ✅成员禁言
+chat.muteUser# chat_id:string user_id:string duration:int = bool;
+
+# ✅解除成员禁言
+chat.unmuteUser# chat_id:string user_id:string = bool;
+
+# ✅修改成员角色 role:角色类型(0普通成员 1管理员 2群主)
+chat.editRole# chat_id:string user_id:string role:int = bool;
+
+# ✅转移群主
+chat.transferOwner# chat_id:string user_id:string = bool;
+
+# ✅解散群
+chat.dismiss# chat_id:string = bool;

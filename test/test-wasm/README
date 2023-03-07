@@ -1,0 +1,6 @@
+安装tinygo:
+brew tap tinygo-org/tools
+brew install tinygo
+
+tinygo编译会报错: syscall/js.finalizeRef not implemented
+处理方法: https://github.com/tinygo-org/tinygo/issues/1140#issuecomment-718145455

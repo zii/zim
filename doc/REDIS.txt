@@ -1,0 +1,74 @@
+REDIS表结构
+
+# 消息ID生成器
+# 用来生成唯一消息ID
+pts = long;
+
+# 事件ID生成器
+seq = long;
+
+# 对话已读最大消息ID
+dialog:<USER_ID>:<PEER_ID>:read = long;
+
+# 对话最新消息ID timeout=7d
+dialog:<USER_ID>:<PEER_ID>:pts = long;
+
+# 对话未读消息数 timeout=7d
+dialog:<USER_ID>:<PEER_ID>:unread = int;
+
+# 单人对话最新已读回执消息ID
+user:<USER_ID>:<PEER_ID>:receipt = long;
+
+# 群最新已读回执消息ID
+chat:<CHAT_ID>:receipt = long;
+
+# 用户/普通群对话最新事件ID
+user:<USER_ID>:<PEER_ID>:seq = long;
+
+# 超级群最新事件ID
+channel:<CHAT_ID>:seq = long;
+
+# 用户对话ID列表 score=最新消息时间
+user:<USER_ID>:dialog:zset = {peer_id:score};
+
+# 用户置顶对话ID score=置顶时间
+user:<USER_ID>:pinned:dialog:map = {peer_id:score};
+
+# 用户免打扰设置 {peer_id:PeerNotifySetting}
+user:<USER_ID>:pnotify:map = {peer_id:{unread:bool}}
+
+# 超级群最新消息ID
+channel:<CHANNEL_ID>:pts = long;
+
+# 超级群最新消息时间 用于对话列表排序
+channel:<CHANNEL_ID>:time = int;
+
+# 群成员列表 score=role*100000000+入群时间/上线时间
+chat:<CHAT_ID>:member:zset = {user_id:score};
+
+# 用户所在超级群缓存 timeout=1d
+user:<USER_ID>:channels = [chat_id];
+
+# 用户删掉的超级群对话
+# 增加时机: 删除对话
+# 删除时机: 获取对话列表, 并且超级群有新消息
+user:<USER_ID>:ddc:map = {chat_id:删除时间};
+
+# 超级群消息分段计数器, 为了优化mysql count性能, 每10000条消息分一个区间, 缩小count查询范围
+# mysql count速度, 条数越多越慢:
+	10000条, 用时0.007s
+	20000条, 用时0.014s
+	400000条, 用时0.2s
+	800000条, 用时0.3s
+# 例如: {
+	"0": 10, # 0～10000有10条消息
+	"10000": 30, # 10000~最新有30条消息
+}
+# 只保留最近100段
+channel:<CHAT_ID>:msgcnt:map = {min_id:int};
+
+# 用户设备在线
+user:<USER_ID>:ol:map = {token:上线时间};
+
+# 所有用户在线表 定时回收
+online:zset = {user_id:心跳时间};

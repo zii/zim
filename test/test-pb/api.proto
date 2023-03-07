@@ -1,0 +1,24 @@
+syntax = "proto3";
+package api;
+
+option go_package = "./;main";
+
+message PhotoElem {
+  string big = 1;
+  string small = 2;
+}
+
+message SoundElem {
+  string url = 1;
+}
+
+message Message {
+  int64 id = 1;
+  int32 type = 2;
+  string from_id = 3 [json_name = "from_id"];
+  string to_id = 4 [json_name = "to_id"];
+  oneof elem {
+      PhotoElem photo = 5;
+      SoundElem sound = 6;
+  }
+}
